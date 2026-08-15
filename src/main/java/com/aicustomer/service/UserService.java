@@ -8,13 +8,9 @@ import com.aicustomer.exception.AccountAlreadyExistsException;
 import com.aicustomer.exception.AccountNotFoundException;
 import com.aicustomer.exception.PasswordErrorException;
 import com.aicustomer.repository.UserRepository;
+import com.aicustomer.util.PasswordUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 
 @Service
 public class UserService {
@@ -33,7 +29,7 @@ public class UserService {
 
         User user = new User();
         user.setAccount(request.getAccount());
-        user.setPassword(hashPassword(request.getPassword()));
+        user.setPassword(PasswordUtils.hash(request.getPassword()));
         user.setName(request.getName());
         User saved = userRepository.save(user);
 
@@ -44,7 +40,7 @@ public class UserService {
         User user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(AccountNotFoundException::new);
 
-        String hashedInput = hashPassword(request.getPassword());
+        String hashedInput = PasswordUtils.hash(request.getPassword());
         if (!hashedInput.equals(user.getPassword())) {
             throw new PasswordErrorException();
         }
@@ -52,22 +48,7 @@ public class UserService {
         return toResponse(user);
     }
 
-    private String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
-        }
-    }
-
     private AccountResponse toResponse(User user) {
         return new AccountResponse(user.getId(), user.getAccount(), user.getName());
-    }
-
-    @Transactional
-    public void cleanup(String account) {
-        userRepository.findByAccount(account).ifPresent(userRepository::delete);
     }
 }

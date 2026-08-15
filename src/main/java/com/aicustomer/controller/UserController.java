@@ -29,10 +29,4 @@ public class UserController {
         AccountResponse response = userService.login(request);
         return ApiResponse.success(response);
     }
-
-    @DeleteMapping("/cleanup/{account}")
-    public ApiResponse<Void> cleanup(@PathVariable String account) {
-        userService.cleanup(account);
-        return ApiResponse.success(null);
-    }
 }

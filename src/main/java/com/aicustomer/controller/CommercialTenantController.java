@@ -29,10 +29,4 @@ public class CommercialTenantController {
         AccountResponse response = commercialTenantService.login(request);
         return ApiResponse.success(response);
     }
-
-    @DeleteMapping("/cleanup/{account}")
-    public ApiResponse<Void> cleanup(@PathVariable String account) {
-        commercialTenantService.cleanup(account);
-        return ApiResponse.success(null);
-    }
 }

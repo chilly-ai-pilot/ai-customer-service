@@ -9,7 +9,12 @@ public final class ErrorCodes {
     public static final int PASSWORD_ERROR = 1003;
     public static final int PARAMETER_ERROR = 1004;
 
+    public static final int UNAUTHORIZED = 401;
+    public static final int FORBIDDEN    = 403;
+
     public static final String MSG_ACCOUNT_ALREADY_EXISTS = "账号已存在";
     public static final String MSG_ACCOUNT_NOT_FOUND = "账号不存在";
     public static final String MSG_PASSWORD_ERROR = "密码错误";
+    public static final String MSG_UNAUTHORIZED = "未登录";
+    public static final String MSG_FORBIDDEN    = "无权限";
 }

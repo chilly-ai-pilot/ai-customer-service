@@ -7,6 +7,7 @@ import com.aicustomer.entity.CommercialTenant;
 import com.aicustomer.exception.AccountAlreadyExistsException;
 import com.aicustomer.exception.AccountNotFoundException;
 import com.aicustomer.exception.PasswordErrorException;
+import com.aicustomer.constant.SubjectType;
 import com.aicustomer.repository.CommercialTenantRepository;
 import com.aicustomer.util.PasswordUtils;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommercialTenantService {
 
     private final CommercialTenantRepository commercialTenantRepository;
+    private final TokenService tokenService;
 
-    public CommercialTenantService(CommercialTenantRepository commercialTenantRepository) {
+    public CommercialTenantService(CommercialTenantRepository commercialTenantRepository, TokenService tokenService) {
         this.commercialTenantRepository = commercialTenantRepository;
+        this.tokenService = tokenService;
     }
 
     @Transactional
@@ -33,7 +36,13 @@ public class CommercialTenantService {
         tenant.setName(request.getName());
         CommercialTenant saved = commercialTenantRepository.save(tenant);
 
-        return toResponse(saved);
+        String token = tokenService.generateToken(SubjectType.TENANT, saved.getId());
+        return AccountResponse.builder()
+                .id(saved.getId())
+                .account(saved.getAccount())
+                .name(saved.getName())
+                .token(token)
+                .build();
     }
 
     public AccountResponse login(LoginRequest request) {
@@ -45,10 +54,12 @@ public class CommercialTenantService {
             throw new PasswordErrorException();
         }
 
-        return toResponse(tenant);
-    }
-
-    private AccountResponse toResponse(CommercialTenant tenant) {
-        return new AccountResponse(tenant.getId(), tenant.getAccount(), tenant.getName());
+        String token = tokenService.generateToken(SubjectType.TENANT, tenant.getId());
+        return AccountResponse.builder()
+                .id(tenant.getId())
+                .account(tenant.getAccount())
+                .name(tenant.getName())
+                .token(token)
+                .build();
     }
 }

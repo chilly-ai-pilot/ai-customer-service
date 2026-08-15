@@ -21,4 +21,7 @@ public class AccountResponse {
 
     @Schema(description = "名称", example = "张三")
     private String name;
+
+    @Schema(description = "登录凭证", example = "a1b2c3d4...")
+    private String token;
 }

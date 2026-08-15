@@ -7,6 +7,7 @@ import com.aicustomer.entity.User;
 import com.aicustomer.exception.AccountAlreadyExistsException;
 import com.aicustomer.exception.AccountNotFoundException;
 import com.aicustomer.exception.PasswordErrorException;
+import com.aicustomer.constant.SubjectType;
 import com.aicustomer.repository.UserRepository;
 import com.aicustomer.util.PasswordUtils;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final TokenService tokenService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, TokenService tokenService) {
         this.userRepository = userRepository;
+        this.tokenService = tokenService;
     }
 
     @Transactional
@@ -33,7 +36,13 @@ public class UserService {
         user.setName(request.getName());
         User saved = userRepository.save(user);
 
-        return toResponse(saved);
+        String token = tokenService.generateToken(SubjectType.USER, saved.getId());
+        return AccountResponse.builder()
+                .id(saved.getId())
+                .account(saved.getAccount())
+                .name(saved.getName())
+                .token(token)
+                .build();
     }
 
     public AccountResponse login(LoginRequest request) {
@@ -45,10 +54,12 @@ public class UserService {
             throw new PasswordErrorException();
         }
 
-        return toResponse(user);
-    }
-
-    private AccountResponse toResponse(User user) {
-        return new AccountResponse(user.getId(), user.getAccount(), user.getName());
+        String token = tokenService.generateToken(SubjectType.USER, user.getId());
+        return AccountResponse.builder()
+                .id(user.getId())
+                .account(user.getAccount())
+                .name(user.getName())
+                .token(token)
+                .build();
     }
 }

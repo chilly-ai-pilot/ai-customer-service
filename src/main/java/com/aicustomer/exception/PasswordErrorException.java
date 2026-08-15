@@ -1,8 +1,10 @@
 package com.aicustomer.exception;
 
+import com.aicustomer.constant.ErrorCodes;
+
 public class PasswordErrorException extends BusinessException {
 
     public PasswordErrorException() {
-        super(1003, "密码错误");
+        super(ErrorCodes.PASSWORD_ERROR, ErrorCodes.MSG_PASSWORD_ERROR);
     }
 }

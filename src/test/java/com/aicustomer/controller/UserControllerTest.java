@@ -1,4 +1,6 @@
 package com.aicustomer.controller;
+import static com.aicustomer.constant.ErrorCodes.*;
+import com.aicustomer.constant.ErrorCodes;
 
 import com.aicustomer.dto.request.LoginRequest;
 import com.aicustomer.dto.request.RegisterRequest;
@@ -78,8 +80,8 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1001))
-                    .andExpect(jsonPath("$.message").value("账户已存在"));
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.ACCOUNT_ALREADY_EXISTS))
+                    .andExpect(jsonPath("$.message").value(ErrorCodes.MSG_ACCOUNT_ALREADY_EXISTS));
         }
 
         @Test
@@ -91,7 +93,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1004))
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PARAMETER_ERROR))
                     .andExpect(jsonPath("$.message").value("账号不能为空"));
         }
 
@@ -104,7 +106,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1004))
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PARAMETER_ERROR))
                     .andExpect(jsonPath("$.message").value("密码不能为空"));
         }
 
@@ -117,7 +119,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1004))
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PARAMETER_ERROR))
                     .andExpect(jsonPath("$.message").value("名称不能为空"));
         }
     }
@@ -166,8 +168,8 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1002))
-                    .andExpect(jsonPath("$.message").value("密码错误"));
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PASSWORD_ERROR))
+                    .andExpect(jsonPath("$.message").value(ErrorCodes.MSG_PASSWORD_ERROR));
         }
 
         @Test
@@ -179,8 +181,8 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1003))
-                    .andExpect(jsonPath("$.message").value("账户不存在"));
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.ACCOUNT_NOT_FOUND))
+                    .andExpect(jsonPath("$.message").value(ErrorCodes.MSG_ACCOUNT_NOT_FOUND));
         }
 
         @Test
@@ -202,8 +204,8 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1002))
-                    .andExpect(jsonPath("$.message").value("密码错误"));
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PASSWORD_ERROR))
+                    .andExpect(jsonPath("$.message").value(ErrorCodes.MSG_PASSWORD_ERROR));
         }
 
         @Test
@@ -215,7 +217,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1004))
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PARAMETER_ERROR))
                     .andExpect(jsonPath("$.message").value("账号不能为空"));
         }
 
@@ -228,7 +230,7 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1004))
+                    .andExpect(jsonPath("$.code").value(ErrorCodes.PARAMETER_ERROR))
                     .andExpect(jsonPath("$.message").value("密码不能为空"));
         }
     }

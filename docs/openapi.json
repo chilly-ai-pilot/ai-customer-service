@@ -1,0 +1,241 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "商户",
+      "description": "商户注册与登录"
+    },
+    {
+      "name": "用户",
+      "description": "用户注册与登录"
+    }
+  ],
+  "paths": {
+    "/user/register": {
+      "post": {
+        "tags": [
+          "用户"
+        ],
+        "summary": "用户注册",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": [
+          "用户"
+        ],
+        "summary": "用户登录",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/commercialTenant/register": {
+      "post": {
+        "tags": [
+          "商户"
+        ],
+        "summary": "商户注册",
+        "operationId": "register_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/commercialTenant/login": {
+      "post": {
+        "tags": [
+          "商户"
+        ],
+        "summary": "商户登录",
+        "operationId": "login_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RegisterRequest": {
+        "required": [
+          "account",
+          "name",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "账号",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "Pass123456"
+          },
+          "name": {
+            "type": "string",
+            "description": "名称",
+            "example": "张三"
+          }
+        },
+        "description": "注册请求"
+      },
+      "AccountResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64",
+            "example": 1
+          },
+          "account": {
+            "type": "string",
+            "description": "账号",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "名称",
+            "example": "张三"
+          }
+        },
+        "description": "账号响应"
+      },
+      "ApiResponseAccountResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码：0=成功，1001=账号已存在，1002=账号不存在，1003=密码错误，1004=参数错误",
+            "format": "int32",
+            "example": 0
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AccountResponse"
+          }
+        },
+        "description": "通用响应"
+      },
+      "LoginRequest": {
+        "required": [
+          "account",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "账号",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "Pass123456"
+          }
+        },
+        "description": "登录请求"
+      }
+    }
+  }
+}

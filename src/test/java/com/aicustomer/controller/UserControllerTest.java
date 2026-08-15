@@ -153,7 +153,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("密码错误 - 应返回 code=1002 密码错误")
+        @DisplayName("密码错误 - 应返回 code=1003 密码错误")
         void login_WrongPassword() throws Exception {
             // 先注册
             RegisterRequest registerRequest = new RegisterRequest("user1", "correctpassword", "用户1");
@@ -173,7 +173,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("账户不存在 - 应返回 code=1003 账户不存在")
+        @DisplayName("账户不存在 - 应返回 code=1002 账户不存在")
         void login_AccountNotFound() throws Exception {
             LoginRequest loginRequest = new LoginRequest("nonexistent", "anypassword");
 

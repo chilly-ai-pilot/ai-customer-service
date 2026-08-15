@@ -151,7 +151,7 @@ class CommercialTenantControllerTest {
         }
 
         @Test
-        @DisplayName("商户密码错误 - 应返回 code=1002 密码错误")
+        @DisplayName("商户密码错误 - 应返回 code=1003 密码错误")
         void login_WrongPassword() throws Exception {
             // 先注册
             RegisterRequest registerRequest = new RegisterRequest("tenant1", "correctpassword", "商户1");
@@ -171,7 +171,7 @@ class CommercialTenantControllerTest {
         }
 
         @Test
-        @DisplayName("商户账户不存在 - 应返回 code=1003 账户不存在")
+        @DisplayName("商户账户不存在 - 应返回 code=1002 账户不存在")
         void login_AccountNotFound() throws Exception {
             LoginRequest loginRequest = new LoginRequest("nonexistent_tenant", "anypassword");
 

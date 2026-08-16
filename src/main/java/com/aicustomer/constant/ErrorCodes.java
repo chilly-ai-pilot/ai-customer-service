@@ -11,6 +11,7 @@ public final class ErrorCodes {
 
     public static final int UNAUTHORIZED = 401;
     public static final int FORBIDDEN    = 403;
+    public static final int NOT_FOUND    = 404;
 
     public static final String MSG_ACCOUNT_ALREADY_EXISTS = "账号已存在";
     public static final String MSG_ACCOUNT_NOT_FOUND = "账号不存在";

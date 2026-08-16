@@ -9,9 +9,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ApiResponse<Void> handleBusinessException(BusinessException e) {
-        return ApiResponse.error(e.getCode(), e.getMessage());
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ApiResponse<Void> handleResourceNotFoundException(ResourceNotFoundException e) {
+        return ApiResponse.error(com.aicustomer.constant.ErrorCodes.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ApiResponse<Void> handleForbiddenException(ForbiddenException e) {
+        return ApiResponse.error(com.aicustomer.constant.ErrorCodes.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ApiResponse<Void> handleUnauthorizedException(UnauthorizedException e) {
+        return ApiResponse.error(com.aicustomer.constant.ErrorCodes.UNAUTHORIZED, e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -5,6 +5,7 @@ import com.aicustomer.dto.request.UpdateGoodsRequest;
 import com.aicustomer.dto.response.GoodsResponse;
 import com.aicustomer.entity.Goods;
 import com.aicustomer.exception.ForbiddenException;
+import com.aicustomer.exception.ResourceNotFoundException;
 import com.aicustomer.exception.UnauthorizedException;
 import com.aicustomer.constant.SubjectType;
 import com.aicustomer.repository.GoodsRepository;
@@ -42,7 +43,7 @@ public class GoodsService {
     public GoodsResponse update(String token, UpdateGoodsRequest request) {
         Long ctId = resolveTenant(token);
         Goods goods = goodsRepository.findById(request.getId())
-                .orElseThrow(() -> new ForbiddenException());
+                .orElseThrow(() -> new ResourceNotFoundException("Goods", request.getId()));
         if (!goods.getCtId().equals(ctId)) {
             throw new ForbiddenException();
         }
@@ -55,7 +56,7 @@ public class GoodsService {
     public void delete(String token, Long id) {
         Long ctId = resolveTenant(token);
         Goods goods = goodsRepository.findById(id)
-                .orElseThrow(() -> new ForbiddenException());
+                .orElseThrow(() -> new ResourceNotFoundException("Goods", id));
         if (!goods.getCtId().equals(ctId)) {
             throw new ForbiddenException();
         }
@@ -75,7 +76,7 @@ public class GoodsService {
 
     public GoodsResponse detail(Long id) {
         Goods goods = goodsRepository.findById(id)
-                .orElseThrow(() -> new ForbiddenException());
+                .orElseThrow(() -> new ResourceNotFoundException("Goods", id));
         return toResponse(goods);
     }
 

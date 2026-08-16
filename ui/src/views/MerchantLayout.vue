@@ -1,19 +1,24 @@
 <template>
-  <el-container class="layout-container">
-    <el-aside width="200px">
+  <div class="layout-container">
+    <aside class="aside">
       <div class="logo">AI 客服系统</div>
       <el-menu
-        :default-active="activeMenu"
+        :default-active="resolvedActiveMenu"
         class="side-menu"
         @select="handleMenuSelect"
       >
         <el-menu-item v-for="item in menuList" :key="item.path" :index="item.path">
           <span>{{ item.name }}</span>
+          <el-badge
+            v-if="item.path === '/merchant/inbox' && totalUnreadCount > 0"
+            :value="totalUnreadCount > 99 ? '99+' : totalUnreadCount"
+            class="inbox-badge"
+          />
         </el-menu-item>
       </el-menu>
-    </el-aside>
-    <el-container>
-      <el-header class="header">
+    </aside>
+    <div class="right">
+      <header class="header">
         <div class="header-title">商户工作台</div>
         <el-dropdown @command="handleCommand">
           <span class="user-info">
@@ -26,19 +31,19 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-      </el-header>
-      <el-main class="main-content">
+      </header>
+      <main class="main-content">
         <router-view />
-      </el-main>
-    </el-container>
-  </el-container>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { workbenchApi } from '@/api'
+import { workbenchApi, sessionApi } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -47,6 +52,25 @@ const authStore = useAuthStore()
 
 const menuList = ref([])
 const activeMenu = ref('/merchant/goods')
+
+const resolvedActiveMenu = computed(() => {
+  if (activeMenu.value.startsWith('/merchant/inbox')) return '/merchant/inbox'
+  return activeMenu.value
+})
+const totalUnreadCount = ref(0)
+
+async function fetchUnreadCount() {
+  try {
+    const data = await sessionApi.listByTenant({ pageNum: 1, pageSize: 100 })
+    totalUnreadCount.value = data.content.reduce((sum, s) => sum + (s.unreadCount || 0), 0)
+  } catch {
+    totalUnreadCount.value = 0
+  }
+}
+
+function handleSessionRead() {
+  fetchUnreadCount()
+}
 
 onMounted(async () => {
   try {
@@ -59,14 +83,31 @@ onMounted(async () => {
     if (firstMenu) {
       activeMenu.value = '/merchant' + firstMenu.path
     }
+    await fetchUnreadCount()
   } catch (e) {
     menuList.value = []
+  }
+
+  window.addEventListener('chat:session-read', handleSessionRead)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('chat:session-read', handleSessionRead)
+})
+
+watch(() => route.path, (newPath) => {
+  activeMenu.value = newPath
+  if (newPath.startsWith('/merchant/inbox')) {
+    fetchUnreadCount()
   }
 })
 
 function handleMenuSelect(index) {
-  if (index === '/merchant/goods') {
+  if (index === '/merchant/goods' || index === '/merchant/inbox') {
     router.push(index)
+    if (index === '/merchant/inbox') {
+      fetchUnreadCount()
+    }
   } else {
     ElMessage.info('功能开发中')
   }
@@ -83,16 +124,23 @@ function handleCommand(command) {
 <style scoped>
 .layout-container {
   height: 100vh;
+  display: flex;
+  overflow: hidden;
 }
 
-.el-aside {
+.aside {
+  width: 200px;
+  flex-shrink: 0;
   background-color: #304156;
   color: #fff;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .logo {
   height: 60px;
+  flex-shrink: 0;
   line-height: 60px;
   text-align: center;
   font-size: 18px;
@@ -102,8 +150,10 @@ function handleCommand(command) {
 }
 
 .side-menu {
+  flex: 1;
   border-right: none;
   background-color: #304156;
+  overflow-y: auto;
 }
 
 .side-menu :deep(.el-menu-item) {
@@ -117,11 +167,14 @@ function handleCommand(command) {
 }
 
 .header {
+  height: 60px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 0 20px;
 }
 
 .header-title {
@@ -136,8 +189,30 @@ function handleCommand(command) {
   color: #333;
 }
 
+.right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .main-content {
+  flex: 1;
+  min-height: 0;
   background-color: #f0f2f5;
-  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.inbox-badge {
+  margin-left: 6px;
+  line-height: 1;
 }
 </style>

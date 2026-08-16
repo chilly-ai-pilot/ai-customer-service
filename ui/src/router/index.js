@@ -18,6 +18,16 @@ const routes = [
         path: 'goods',
         name: 'MerchantGoods',
         component: () => import('@/views/MerchantGoodsView.vue')
+      },
+      {
+        path: 'inbox',
+        name: 'MerchantChat',
+        component: () => import('@/views/MerchantChatView.vue')
+      },
+      {
+        path: 'inbox/:sessionId',
+        name: 'MerchantChatWindow',
+        component: () => import('@/views/MerchantChatWindowView.vue')
       }
     ]
   },
@@ -29,6 +39,21 @@ const routes = [
         path: 'goods',
         name: 'UserGoods',
         component: () => import('@/views/UserGoodsView.vue')
+      },
+      {
+        path: 'inbox',
+        name: 'UserChat',
+        component: () => import('@/views/UserChatView.vue')
+      },
+      {
+        path: 'inbox/new',
+        name: 'UserNewChat',
+        component: () => import('@/views/UserChatWindowView.vue')
+      },
+      {
+        path: 'inbox/:sessionId',
+        name: 'UserChatWindow',
+        component: () => import('@/views/UserChatWindowView.vue')
       }
     ]
   }

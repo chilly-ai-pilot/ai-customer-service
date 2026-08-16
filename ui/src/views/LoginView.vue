@@ -111,7 +111,7 @@ async function handleUserLogin() {
   userLoading.value = true
   try {
     const data = await userApi.login(userForm.value)
-    authStore.setAuth(data.token, data)
+    authStore.setAuth(data.token, data, 'USER')
     ElMessage.success('登录成功')
     router.push('/user/goods')
   } finally {
@@ -125,7 +125,7 @@ async function handleMerchantLogin() {
   merchantLoading.value = true
   try {
     const data = await commercialTenantApi.login(merchantForm.value)
-    authStore.setAuth(data.token, data)
+    authStore.setAuth(data.token, data, 'TENANT')
     ElMessage.success('登录成功')
     router.push('/merchant/goods')
   } finally {

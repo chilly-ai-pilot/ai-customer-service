@@ -38,11 +38,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { goodsApi } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const goodsList = ref([])
 const loading = ref(false)
 const pageNum = ref(1)
@@ -63,9 +65,10 @@ async function fetchData() {
 function handleConsult(item) {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')
+    router.push('/login')
     return
   }
-  ElMessage.info('咨询功能开发中')
+  router.push({ name: 'UserNewChat', query: { goodsId: item.id, ctId: item.ctId } })
 }
 
 onMounted(() => {

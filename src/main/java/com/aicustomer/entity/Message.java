@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+/**
+ * 消息实体，记录会话中每一条聊天消息。
+ */
 @Entity
 @Table(name = "message_t",
         indexes = {
@@ -27,33 +30,42 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** 消息唯一标识（服务端生成 UUID，用于幂等校验） */
     @Column(name = "message_id", nullable = false, unique = true, length = 64)
     private String messageId;
 
+    /** 所属会话 ID */
     @Column(name = "session_id", nullable = false)
     private Long sessionId;
 
+    /** 发送方 ID */
     @Column(name = "sender_id", nullable = false)
     private Long senderId;
 
+    /** 发送方身份类型 */
     @Enumerated(EnumType.STRING)
     @Column(name = "sender_type", nullable = false, length = 16)
     private SubjectType senderType;
 
+    /** 接收方 ID */
     @Column(name = "receiver_id", nullable = false)
     private Long receiverId;
 
+    /** 接收方身份类型 */
     @Enumerated(EnumType.STRING)
     @Column(name = "receiver_type", nullable = false, length = 16)
     private SubjectType receiverType;
 
+    /** 消息文本内容 */
     @Column(nullable = false, length = 2048)
     private String content;
 
+    /** 是否已读 */
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean isRead = false;
 
+    /** 已读时间 */
     @Column(name = "read_at")
     private Instant readAt;
 

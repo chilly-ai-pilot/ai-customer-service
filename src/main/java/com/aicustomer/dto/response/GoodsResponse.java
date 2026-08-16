@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 商品响应。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

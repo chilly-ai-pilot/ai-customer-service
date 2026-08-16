@@ -11,6 +11,11 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+/**
+ * 用户端 WebSocket 处理器，负责用户 WS 连接的建立、消息收发和断开。
+ * 连接建立前的身份鉴权由 ChatHandshakeInterceptor 在握手阶段完成，
+ * 成功后把 subjectId/token 注入 session attributes，本 Handler 直接取用。
+ */
 @Slf4j
 @Component
 public class UserChatHandler extends TextWebSocketHandler {
@@ -24,6 +29,14 @@ public class UserChatHandler extends TextWebSocketHandler {
     @Autowired
     private ObjectMapper objectMapper;
 
+    /**
+     * WS 连接建立成功回调。
+     *
+     * 步骤：
+     * 1. 从 session attributes 取鉴权得到的 userId 和 token
+     * 2. userId 为空表示握手阶段被拦截，直接拒绝连接
+     * 3. 将连接放入连接池（新连接入池时会自动关闭该身份的旧连接）
+     */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         Long userId = getSubjectId(session);
@@ -38,6 +51,16 @@ public class UserChatHandler extends TextWebSocketHandler {
         log.info("User {} connected via WS, pool size: {}", userId, connectionPool.sizeOf(SubjectType.USER));
     }
 
+    /**
+     * 处理用户发来的文本消息。
+     *
+     * 步骤：
+     * 1. 校验 userId 存在（握手阶段已鉴权，此处防御性校验）
+     * 2. JSON 反序列化消息体
+     * 3. 调用 ChatService 处理消息，获得回执
+     * 4. 将回执通过当前 WS 连接发回给用户
+     * 5. 处理过程中的异常统一返回 ERROR 回执
+     */
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         Long userId = getSubjectId(session);
@@ -62,6 +85,13 @@ public class UserChatHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * WS 连接正常或异常关闭回调。
+     *
+     * 步骤：
+     * 1. 从 session attributes 取 userId
+     * 2. 从连接池中移除该连接并记录日志
+     */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Long userId = getSubjectId(session);
@@ -72,6 +102,10 @@ public class UserChatHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * WS 传输层错误回调（网络中断等）。
+     * 区别于 afterConnectionClosed：此处只处理底层异常，主动从连接池清理。
+     */
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         Long userId = getSubjectId(session);
@@ -81,11 +115,13 @@ public class UserChatHandler extends TextWebSocketHandler {
         }
     }
 
+    /** 从 session attributes 中获取握手阶段注入的 subjectId（Long 类型） */
     private Long getSubjectId(WebSocketSession session) {
         Object id = session.getAttributes().get("subjectId");
         return id instanceof Long ? (Long) id : null;
     }
 
+    /** 从 session attributes 中获取握手阶段注入的 token（String 类型） */
     private String getToken(WebSocketSession session) {
         Object token = session.getAttributes().get("token");
         return token instanceof String ? (String) token : null;

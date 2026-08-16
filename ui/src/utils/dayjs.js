@@ -5,6 +5,12 @@ import 'dayjs/locale/zh-cn'
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
 
+/**
+ * 将日期格式化为相对时间字符串。
+ *
+ * @param {string|Date} date 日期字符串或 Date 对象
+ * @returns {string} 相对时间字符串，如"刚刚"、"5分钟前"、"2小时前"等
+ */
 export function formatRelativeTime(date) {
   if (!date) return ''
   const d = dayjs(date)

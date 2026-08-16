@@ -5,9 +5,16 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 工作台服务，提供工作台菜单配置。
+ */
 @Service
 public class WorkbenchService {
 
+    /**
+     * 返回商户工作台侧边栏菜单。
+     * placeholder=true 的项为占位模块，暂不可点击。
+     */
     public List<MenuItemResponse> getMenu() {
         return List.of(
                 MenuItemResponse.builder()

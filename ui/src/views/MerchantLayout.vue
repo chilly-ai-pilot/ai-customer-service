@@ -9,6 +9,7 @@
       >
         <el-menu-item v-for="item in menuList" :key="item.name" :index="item.name">
           <span>{{ item.name }}</span>
+          <!-- 会话收件箱菜单显示未读数红点 -->
           <el-badge
             v-if="item.name === '会话收件箱' && totalUnreadCount > 0"
             :value="totalUnreadCount > 99 ? '99+' : totalUnreadCount"
@@ -50,30 +51,31 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+// 工作台菜单列表
 const menuList = ref([])
+// 未读消息总数（用于红点显示）
 const totalUnreadCount = ref(0)
 
-// 后端 /workbench/menu 返回的 path 字段（如 "/goods" "/chat"）只是后端自己的语义约定，
-// 前端路由已经按 "/inbox" 命名（见 UI.md 路由表），这里用菜单"名称"而不是后端 path
-// 字符串来做匹配和跳转，避免两边路由命名对不上导致红点/跳转失效。
-// 是否可点击直接读后端返回的 placeholder 字段（MenuItemResponse.placeholder），
-// 不用再猜"第一个非占位项"。
+// 菜单名称 -> 前端路由 映射（后端只返回 name/path，前端自己维护路由映射）
 const ROUTE_BY_MENU_NAME = {
   '商品管理': '/merchant/goods',
   '会话收件箱': '/merchant/inbox'
 }
 
+// 根据当前路由计算激活的菜单项
 const resolvedActiveMenu = computed(() => {
   if (route.path.startsWith('/merchant/inbox')) return '会话收件箱'
   if (route.path.startsWith('/merchant/goods')) return '商品管理'
   return ''
 })
 
+/**
+ * 获取未读消息总数。
+ * 会话列表接口没有单独的"总未读数"字段，只能先拉全部会话再求和。
+ * 先用 pageSize=1 探出 totalElements，再一次性把全部会话拉回来。
+ */
 async function fetchUnreadCount() {
   try {
-    // /session/ct/list 没有"总未读数"接口，只能分页求和；先用 pageSize=1 探出
-    // totalElements，再一次性把全部会话拉回来求和，避免会话数超过固定 pageSize
-    // 时漏算（比如原来写死 pageSize:100 的问题）。
     const peek = await sessionApi.listByTenant({ pageNum: 1, pageSize: 1 })
     const total = peek.totalElements || 0
     if (total === 0) {
@@ -87,18 +89,19 @@ async function fetchUnreadCount() {
   }
 }
 
+/** 监听全局"会话已读"事件（由 ChatWindow 触发），刷新未读数 */
 function handleSessionRead() {
   fetchUnreadCount()
 }
 
 onMounted(async () => {
   try {
+    // 获取工作台菜单
     menuList.value = await workbenchApi.menu()
     await fetchUnreadCount()
   } catch (e) {
     menuList.value = []
   }
-
   window.addEventListener('chat:session-read', handleSessionRead)
 })
 
@@ -106,12 +109,17 @@ onUnmounted(() => {
   window.removeEventListener('chat:session-read', handleSessionRead)
 })
 
+// 路由变化时，若进入收件箱则刷新未读数
 watch(() => route.path, (newPath) => {
   if (newPath.startsWith('/merchant/inbox')) {
     fetchUnreadCount()
   }
 })
 
+/**
+ * 处理侧边栏菜单点击。
+ * placeholder=true 的占位模块提示"功能开发中"，其余按路由映射跳转。
+ */
 function handleMenuSelect(menuName) {
   const item = menuList.value.find((m) => m.name === menuName)
   if (!item || item.placeholder) {
@@ -129,6 +137,7 @@ function handleMenuSelect(menuName) {
   }
 }
 
+/** 处理右上角下拉菜单命令 */
 function handleCommand(command) {
   if (command === 'logout') {
     authStore.clearAuth()

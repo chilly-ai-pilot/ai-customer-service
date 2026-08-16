@@ -1,11 +1,11 @@
 <template>
   <div class="session-list">
     <el-table
-        :data="sessions"
-        v-loading="loading"
-        @row-click="handleRowClick"
-        class="session-table"
-        row-class-name="session-row"
+      :data="sessions"
+      v-loading="loading"
+      @row-click="handleRowClick"
+      class="session-table"
+      row-class-name="session-row"
     >
       <el-table-column label="会话信息" min-width="200">
         <template #default="{ row }">
@@ -39,9 +39,9 @@
       <el-table-column label="状态" width="80" align="center">
         <template #default="{ row }">
           <el-badge
-              v-if="row.unreadCount > 0"
-              :value="row.unreadCount > 99 ? '99+' : row.unreadCount"
-              class="unread-badge"
+            v-if="row.unreadCount > 0"
+            :value="row.unreadCount > 99 ? '99+' : row.unreadCount"
+            class="unread-badge"
           />
           <span v-else class="no-unread" />
         </template>
@@ -49,15 +49,15 @@
     </el-table>
 
     <el-pagination
-        v-if="total > 0"
-        v-model:current-page="pageNum"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        class="pagination"
-        @current-change="fetchData"
-        @size-change="fetchData"
+      v-if="total > 0"
+      v-model:current-page="pageNum"
+      v-model:page-size="pageSize"
+      :total="total"
+      :page-sizes="[10, 20, 50]"
+      layout="total, sizes, prev, pager, next"
+      class="pagination"
+      @current-change="fetchData"
+      @size-change="fetchData"
     />
 
     <el-empty v-if="!loading && sessions.length === 0" description="暂无会话" />
@@ -71,6 +71,7 @@ import { sessionApi, goodsApi, userApi, commercialTenantApi } from '@/api'
 import RelativeTime from './RelativeTime.vue'
 
 const props = defineProps({
+  /** 会话列表类型：'USER' 或 'TENANT' */
   type: { type: String, required: true }
 })
 
@@ -81,13 +82,19 @@ const pageNum = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-// goodsId -> 商品名称 缓存。会话接口（/session/user/list、/session/ct/list）本身不
-// 返回商品名称/商户名称/用户名称，只有 goodsId/ctId/userId，需要各自换名称接口查一次。
+// ---------------------------------------------------------------
+// 名称缓存
+// ---------------------------------------------------------------
+
+/** goodsId -> 商品名称 缓存 */
 const goodsNameMap = ref({})
-// ctId/userId -> 对方名称 缓存：用户端列表按 ctId 查商户名（commercialTenantApi.name），
-// 商户端列表按 userId 查用户名（userApi.name），查不到就继续用编号兜底
+/** ctId/userId -> 对方名称 缓存 */
 const partnerNameMap = ref({})
 
+/**
+ * 批量获取商品名称（仅获取缓存中没有的 ID）。
+ * 查询后写入缓存，替换整个 Map 触发响应式更新。
+ */
 async function resolveGoodsNames(rows) {
   const idsToFetch = [...new Set(
       rows.map((row) => row.goodsId).filter((id) => id != null && !(id in goodsNameMap.value))
@@ -104,10 +111,15 @@ async function resolveGoodsNames(rows) {
         }
       })
   )
-  // 整体替换触发响应式更新，避免 Map 直接赋值不触发表格重渲染
+  // 整体替换触发响应式更新（Map 直接赋值不触发表格重渲染）
   goodsNameMap.value = { ...goodsNameMap.value, ...Object.fromEntries(entries) }
 }
 
+/**
+ * 批量获取对方名称。
+ * 用户端按 ctId 查商户名，商户端按 userId 查用户名。
+ * 查询失败的 ID 不会写入缓存，继续用编号兜底。
+ */
 async function resolvePartnerNames(rows) {
   const idKey = props.type === 'USER' ? 'ctId' : 'userId'
   const nameApi = props.type === 'USER' ? commercialTenantApi.name : userApi.name
@@ -122,17 +134,25 @@ async function resolvePartnerNames(rows) {
           const name = await nameApi(id)
           return [id, name || null]
         } catch {
-          // 查不到就先不写入缓存，继续用编号兜底展示
           return [id, null]
         }
       })
   )
+  // 只写入有名字的项，查不到的继续用编号兜底
   partnerNameMap.value = {
     ...partnerNameMap.value,
     ...Object.fromEntries(entries.filter(([, name]) => name))
   }
 }
 
+// ---------------------------------------------------------------
+// 数据加载
+// ---------------------------------------------------------------
+
+/**
+ * 加载会话列表。
+ * 加载完成后并行触发商品名称和对方名称的批量解析。
+ */
 async function fetchData() {
   loading.value = true
   try {
@@ -140,19 +160,32 @@ async function fetchData() {
     const data = await api({ pageNum: pageNum.value, pageSize: pageSize.value })
     sessions.value = data.content || []
     total.value = data.totalElements || 0
+    // 名称解析不阻塞表格展示，放到 Promise.all 里并行执行
     await Promise.all([resolveGoodsNames(sessions.value), resolvePartnerNames(sessions.value)])
   } finally {
     loading.value = false
   }
 }
 
+// ---------------------------------------------------------------
+// 会话点击跳转
+// ---------------------------------------------------------------
+
+/** 点击会话行，跳转到对应的聊天窗口 */
 function handleRowClick(row) {
   const basePath = props.type === 'USER' ? '/user/inbox' : '/merchant/inbox'
   router.push(`${basePath}/${row.id}`)
 }
 
+// ---------------------------------------------------------------
+// 名称查询
+// ---------------------------------------------------------------
+
+/**
+ * 获取会话对方名称。
+ * 优先从缓存中取，取不到则用编号兜底。
+ */
 function getPartnerName(row) {
-  // 名字异步查询，回来之前（或查询失败）先用编号兜底，不阻塞列表渲染
   if (props.type === 'USER') {
     if (row.ctId == null) return '商户'
     return partnerNameMap.value[row.ctId] || `#${row.ctId}`
@@ -161,21 +194,33 @@ function getPartnerName(row) {
   return partnerNameMap.value[row.userId] || `#${row.userId}`
 }
 
+/** 获取咨询商品名称，优先从缓存中取，取不到则用编号兜底 */
 function getGoodsName(row) {
   if (row.goodsId == null) return '商品'
   return goodsNameMap.value[row.goodsId] || '商品'
 }
 
+/** 文本截断 */
 function truncate(text, maxLen) {
   if (!text) return ''
   return text.length > maxLen ? text.slice(0, maxLen) + '...' : text
 }
 
+// ---------------------------------------------------------------
+// 全局事件监听
+// ---------------------------------------------------------------
+
+/**
+ * 监听"会话已读"全局事件（由 ChatWindow 触发）。
+ * 若被标记已读的会话在当前列表中且有未读数，则刷新列表。
+ */
 function handleSessionRead(event) {
   const sessionId = Number(event?.detail?.sessionId)
   if (!sessionId) return
 
-  const hasUnread = sessions.value.some((row) => Number(row.id) === sessionId && Number(row.unreadCount || 0) > 0)
+  const hasUnread = sessions.value.some(
+      (row) => Number(row.id) === sessionId && Number(row.unreadCount || 0) > 0
+  )
   if (hasUnread) {
     fetchData()
   }

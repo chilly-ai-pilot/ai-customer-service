@@ -13,6 +13,10 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 商品管理 Controller，提供商品的增删改查。
+ * /goods/all 公开可访问，无需 token。
+ */
 @RestController
 @RequestMapping("/goods")
 @Tag(name = "商品管理", description = "商户商品管理")
@@ -56,6 +60,7 @@ public class GoodsController {
         return ApiResponse.success(null);
     }
 
+    /** 查询当前商户的商品列表（需登录） */
     @Operation(summary = "我的商品列表")
     @GetMapping("/mine")
     public ApiResponse<Page<GoodsResponse>> mine(
@@ -67,6 +72,7 @@ public class GoodsController {
         return ApiResponse.success(page);
     }
 
+    /** 查询全部商品（无需登录） */
     @Operation(summary = "全部商品列表")
     @GetMapping("/all")
     public ApiResponse<Page<GoodsResponse>> all(
@@ -76,6 +82,7 @@ public class GoodsController {
         return ApiResponse.success(page);
     }
 
+    /** 查询商品详情 */
     @Operation(summary = "商品详情")
     @GetMapping("/detail")
     public ApiResponse<GoodsResponse> detail(@RequestParam Long id) {

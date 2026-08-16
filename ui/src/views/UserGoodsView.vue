@@ -51,6 +51,7 @@ const pageNum = ref(1)
 const pageSize = ref(12)
 const total = ref(0)
 
+/** 加载商品列表 */
 async function fetchData() {
   loading.value = true
   try {
@@ -62,6 +63,10 @@ async function fetchData() {
   }
 }
 
+/**
+ * 处理点击"咨询"按钮。
+ * 未登录时提示并跳转登录页，已登录则跳转至聊天窗口（带 goodsId 和 ctId query）。
+ */
 function handleConsult(item) {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('请先登录')

@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+/**
+ * 会话列表项响应，包含会话基本信息和预览数据。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,7 +40,7 @@ public class SessionResponse {
     @Schema(description = "创建时间")
     private Instant createdAt;
 
-    @Schema(description = "最后一条消息内容（预览）")
+    @Schema(description = "最后一条消息内容预览（最多 50 字）")
     private String lastMessageContent;
 
     @Schema(description = "当前用户在该会话中的未读消息数")

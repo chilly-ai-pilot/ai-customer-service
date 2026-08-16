@@ -40,19 +40,22 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+/** 记录上一次访问的收件箱路由（含 sessionId），切换菜单时跳回该路由 */
 const lastInboxRoute = ref('/user/inbox')
 
+// 根据当前路由路径计算激活菜单项
 const activeMenu = computed(() => {
   if (route.path.startsWith('/user/inbox')) return '/user/inbox'
   return route.path
 })
 
+// 监听路由变化，记录最近一次访问的收件箱路由
 watch(
   () => route.fullPath,
   (fullPath) => {
@@ -63,6 +66,10 @@ watch(
   { immediate: true }
 )
 
+/**
+ * 处理侧边栏菜单点击。
+ * 收件箱菜单：跳回最近一次访问的收件箱路由（含 sessionId 的详情页或空列表页）。
+ */
 function handleMenuSelect(index) {
   if (index === '/user/inbox') {
     router.push(lastInboxRoute.value || '/user/inbox')
@@ -71,6 +78,7 @@ function handleMenuSelect(index) {
   router.push(index)
 }
 
+/** 处理右上角下拉菜单命令 */
 function handleCommand(command) {
   if (command === 'logout') {
     authStore.clearAuth()

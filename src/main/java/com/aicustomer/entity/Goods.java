@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 商品实体，由商户创建并管理。
+ */
 @Entity
 @Table(name = "goods_t")
 @Data
@@ -21,6 +24,7 @@ public class Goods {
     @Column(nullable = false, length = 128)
     private String name;
 
+    /** 所属商户 ID */
     @Column(nullable = false)
     private Long ctId;
 }

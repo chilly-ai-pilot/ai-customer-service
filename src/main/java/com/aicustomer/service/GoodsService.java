@@ -13,6 +13,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 商品服务，提供商品的增删改查。
+ */
 @Service
 public class GoodsService {
 
@@ -22,6 +25,9 @@ public class GoodsService {
         this.goodsRepository = goodsRepository;
     }
 
+    /**
+     * 新增商品（归属当前登录商户）。
+     */
     @Transactional
     public GoodsResponse add(Long ctId, AddGoodsRequest request) {
         Goods goods = Goods.builder()
@@ -32,6 +38,12 @@ public class GoodsService {
         return toResponse(saved);
     }
 
+    /**
+     * 更新商品（仅商品所属商户可操作）。
+     *
+     * @throws ResourceNotFoundException 商品不存在
+     * @throws ForbiddenException        无权操作（不是所属商户）
+     */
     @Transactional
     public GoodsResponse update(Long ctId, UpdateGoodsRequest request) {
         Goods goods = goodsRepository.findById(request.getId())
@@ -44,6 +56,12 @@ public class GoodsService {
         return toResponse(saved);
     }
 
+    /**
+     * 删除商品（仅商品所属商户可操作）。
+     *
+     * @throws ResourceNotFoundException 商品不存在
+     * @throws ForbiddenException        无权操作
+     */
     @Transactional
     public void delete(Long ctId, Long id) {
         Goods goods = goodsRepository.findById(id)
@@ -54,16 +72,19 @@ public class GoodsService {
         goodsRepository.delete(goods);
     }
 
+    /** 查询当前商户的全部商品 */
     public Page<GoodsResponse> mine(Long ctId, int pageNum, int pageSize) {
         PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.DESC, "id"));
         return goodsRepository.findByCtId(ctId, pageRequest).map(this::toResponse);
     }
 
+    /** 查询全部商品（无需登录） */
     public Page<GoodsResponse> all(int pageNum, int pageSize) {
         PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.DESC, "id"));
         return goodsRepository.findAll(pageRequest).map(this::toResponse);
     }
 
+    /** 查询商品详情 */
     public GoodsResponse detail(Long id) {
         Goods goods = goodsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Goods", id));

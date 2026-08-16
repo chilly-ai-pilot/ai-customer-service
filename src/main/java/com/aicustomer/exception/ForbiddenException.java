@@ -1,9 +1,14 @@
 package com.aicustomer.exception;
 
-import com.aicustomer.constant.ErrorCodes;
-
+/**
+ * 403 Forbidden：当前登录身份无权访问请求的资源。
+ */
 public class ForbiddenException extends BusinessException {
     public ForbiddenException() {
-        super(ErrorCodes.FORBIDDEN, ErrorCodes.MSG_FORBIDDEN);
+        super(403, "无权限");
+    }
+
+    public ForbiddenException(String message) {
+        super(403, message);
     }
 }

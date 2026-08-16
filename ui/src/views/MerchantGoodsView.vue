@@ -35,6 +35,7 @@
       @size-change="fetchData"
     />
 
+    <!-- 新增/编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="商品名称" prop="name">
@@ -55,9 +56,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { goodsApi } from '@/api'
 import dayjs from '@/utils/dayjs'
 
-// 注意：后端 GoodsResponse 目前没有返回 createdAt 字段（见 openapi.json），
-// 这一列暂时会一直显示 "—"。这里先把展示逻辑补上，等后端加了这个字段就能直接生效，
-// 不用再改前端。
+// 格式化日期时间
 function formatDateTime(date) {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
 }
@@ -78,6 +77,7 @@ const rules = {
   name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }]
 }
 
+/** 加载我的商品列表 */
 async function fetchData() {
   loading.value = true
   try {
@@ -89,6 +89,7 @@ async function fetchData() {
   }
 }
 
+/** 打开新增弹窗 */
 function openAddDialog() {
   isEdit.value = false
   dialogTitle.value = '新增商品'
@@ -97,6 +98,7 @@ function openAddDialog() {
   dialogVisible.value = true
 }
 
+/** 打开编辑弹窗 */
 function openEditDialog(row) {
   isEdit.value = true
   dialogTitle.value = '编辑商品'
@@ -104,6 +106,10 @@ function openEditDialog(row) {
   dialogVisible.value = true
 }
 
+/**
+ * 提交新增或编辑。
+ * 提交成功后关闭弹窗并刷新列表。
+ */
 async function handleSubmit() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
@@ -119,10 +125,14 @@ async function handleSubmit() {
     dialogVisible.value = false
     fetchData()
   } catch (e) {
-    // error handled by interceptor
+    // 错误已被 request.js 拦截器统一处理
   }
 }
 
+/**
+ * 处理删除商品。
+ * 弹出确认框，用户确认后才执行删除。
+ */
 async function handleDelete(id) {
   try {
     await ElMessageBox.confirm('确定删除该商品吗？', '提示', {
@@ -134,7 +144,7 @@ async function handleDelete(id) {
     ElMessage.success('删除成功')
     fetchData()
   } catch (e) {
-    // user cancelled or error
+    // 用户取消或删除失败，错误已被拦截器处理
   }
 }
 

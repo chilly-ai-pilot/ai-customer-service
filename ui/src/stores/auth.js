@@ -2,9 +2,24 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import router from '@/router'
 
-// 原来只有一份 token/userInfo/userType，存在固定的 localStorage key 下，
-// 用户号和商户号谁后登录就会把谁的登录态覆盖掉，没法同时保持登录。
-// 这里按身份拆成两个独立的 store，各自用不同前缀的 key 存储，互不覆盖。
+/**
+ * 认证状态管理。
+ *
+ * 设计说明：
+ * 用户端和商户端分别维护独立的登录态（token 存在不同的 localStorage key 下），
+ * 互不覆盖，允许同时保持登录。
+ *
+ * useAuthStore()：通用入口，根据当前路由路径自动判断身份类型。
+ * useUserAuthStore()：用户端专用（登录页使用）
+ * useMerchantAuthStore()：商户端专用（登录页使用）
+ */
+
+/**
+ * 创建认证 Store 工厂。
+ *
+ * @param {string} storeId   Pinia store ID
+ * @param {string} storagePrefix localStorage key 前缀
+ */
 function createAuthStore(storeId, storagePrefix) {
   const tokenKey = `${storagePrefix}_token`
   const userInfoKey = `${storagePrefix}_userInfo`
@@ -15,8 +30,16 @@ function createAuthStore(storeId, storagePrefix) {
     const userInfo = ref(JSON.parse(localStorage.getItem(userInfoKey) || 'null'))
     const userType = ref(localStorage.getItem(userTypeKey) || '')
 
+    /** 是否已登录 */
     const isLoggedIn = computed(() => !!token.value)
 
+    /**
+     * 保存登录态到响应式变量和 localStorage。
+     *
+     * @param {string} newToken  新 token
+     * @param {Object} info      用户信息
+     * @param {string} type     身份类型（'USER' 或 'TENANT'）
+     */
     function setAuth(newToken, info, type) {
       token.value = newToken
       userInfo.value = info
@@ -26,6 +49,7 @@ function createAuthStore(storeId, storagePrefix) {
       localStorage.setItem(userTypeKey, type)
     }
 
+    /** 清除登录态 */
     function clearAuth() {
       token.value = ''
       userInfo.value = null
@@ -39,16 +63,20 @@ function createAuthStore(storeId, storagePrefix) {
   })
 }
 
-// 用户号登录态，固定 userType = 'USER'
+/** 用户端登录态，固定 userType = 'USER' */
 export const useUserAuthStore = createAuthStore('userAuth', 'user')
-// 商户号登录态，固定 userType = 'TENANT'
+
+/** 商户端登录态，固定 userType = 'TENANT' */
 export const useMerchantAuthStore = createAuthStore('merchantAuth', 'merchant')
 
-// 当前生效的登录态：按当前路由处在 /user 还是 /merchant 分支来决定用哪一份，
-// 这样组件、request 拦截器、WebSocket 里原来的 useAuthStore() 调用完全不用改，
-// 各自页面天然只会用到自己那份 token，用户号和商户号可以同时保持登录。
-// 注意：登录页 /login 不属于任何一个分支，两个表单要分别显式用
-// useUserAuthStore / useMerchantAuthStore，不能用这个通用入口。
+/**
+ * 通用认证 Store：根据当前路由路径判断身份类型并返回对应的 Store 实例。
+ * 供业务页面（Layout、View、组件）使用，无需关心当前在哪个分支。
+ *
+ * 注意：登录页 /login 不属于 /user 或 /merchant 任何一个分支，
+ * 两个表单必须分别显式调用 useUserAuthStore / useMerchantAuthStore，
+ * 不能用这个自动判断入口。
+ */
 export function useAuthStore() {
   const path = router.currentRoute.value.path
   return path.startsWith('/merchant') ? useMerchantAuthStore() : useUserAuthStore()

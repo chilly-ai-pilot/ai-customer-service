@@ -18,6 +18,7 @@ import ChatWindow from '@/components/ChatWindow.vue'
 const route = useRoute()
 const router = useRouter()
 
+// 聊天窗口标题：默认用父组件传的 title，等异步查到对方真实名字后自动替换
 const chatTitle = computed(() => {
   const ctId = route.query.ctId
   const goodsId = route.query.goodsId
@@ -30,8 +31,11 @@ const chatTitle = computed(() => {
   return '会话详情'
 })
 
-// SESSION_CREATED 之后把地址栏更新为带 sessionId 的路径，同一个命名路由
-// （UserChatWindow）只是替换 params，不会重新挂载组件、不会打断 WebSocket 连接
+/**
+ * SESSION_CREATED 后把地址栏更新为带 sessionId 的路径。
+ * 同一命名路由（UserChatWindow）只是替换 params，不会重新挂载组件，
+ * WebSocket 连接得以保留。
+ */
 function handleSessionCreated(sessionId) {
   router.replace({ name: 'UserChatWindow', params: { sessionId } })
 }

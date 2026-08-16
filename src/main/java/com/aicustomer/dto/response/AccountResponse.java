@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 登录/注册成功后的账号响应，包含账号信息和登录凭证 token。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,6 +25,6 @@ public class AccountResponse {
     @Schema(description = "名称", example = "张三")
     private String name;
 
-    @Schema(description = "登录凭证", example = "a1b2c3d4...")
+    @Schema(description = "登录凭证（JWT/Token）", example = "a1b2c3d4...")
     private String token;
 }

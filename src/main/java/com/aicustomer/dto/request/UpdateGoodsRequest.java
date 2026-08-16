@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 更新商品请求。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

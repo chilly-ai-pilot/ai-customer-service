@@ -13,6 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 商户端 Controller，提供商户注册、登录、名称查询。
+ */
 @RestController
 @RequestMapping("/commercialTenant")
 @Tag(name = "商户", description = "商户注册与登录")
@@ -35,6 +38,10 @@ public class CommercialTenantController {
         return ApiResponse.success(response);
     }
 
+    /**
+     * 按商户 ID 查询名称，供聊天窗口展示对方名字用。
+     * 查不到时返回 null，不抛异常，避免打断聊天页。
+     */
     @Operation(summary = "按商户ID查名称（供聊天窗口展示对方名字用）")
     @GetMapping("/{id}/name")
     public ApiResponse<String> name(@PathVariable Long id) {

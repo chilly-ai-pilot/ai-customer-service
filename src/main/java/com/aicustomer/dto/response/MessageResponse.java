@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+/**
+ * 消息详情响应，对应数据库中 message_t 表的一条记录。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,19 +19,19 @@ import java.time.Instant;
 @Schema(description = "消息响应")
 public class MessageResponse {
 
-    @Schema(description = "消息ID")
+    @Schema(description = "数据库主键 ID")
     private Long id;
 
-    @Schema(description = "消息唯一标识")
+    @Schema(description = "服务端生成的唯一消息标识")
     private String messageId;
 
-    @Schema(description = "会话ID")
+    @Schema(description = "所属会话 ID")
     private Long sessionId;
 
-    @Schema(description = "发送方ID")
+    @Schema(description = "发送方 ID")
     private Long senderId;
 
-    @Schema(description = "发送方类型")
+    @Schema(description = "发送方身份类型")
     private SubjectType senderType;
 
     @Schema(description = "消息内容")

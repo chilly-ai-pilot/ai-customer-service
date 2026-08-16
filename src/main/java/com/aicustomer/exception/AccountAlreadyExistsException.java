@@ -1,10 +1,10 @@
 package com.aicustomer.exception;
 
-import com.aicustomer.constant.ErrorCodes;
-
+/**
+ * 账号已存在：注册时账号在数据库中已有记录。
+ */
 public class AccountAlreadyExistsException extends BusinessException {
-
     public AccountAlreadyExistsException() {
-        super(ErrorCodes.ACCOUNT_ALREADY_EXISTS, ErrorCodes.MSG_ACCOUNT_ALREADY_EXISTS);
+        super(1001, "账号已存在");
     }
 }

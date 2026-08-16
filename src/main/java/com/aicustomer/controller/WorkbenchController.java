@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 工作台 Controller，提供商户工作台菜单。
+ */
 @RestController
 @RequestMapping("/workbench")
 @Tag(name = "工作台", description = "商户工作台")
@@ -27,6 +30,7 @@ public class WorkbenchController {
         this.tokenService = tokenService;
     }
 
+    /** 返回商户工作台侧边栏菜单（需登录） */
     @Operation(summary = "工作台菜单")
     @GetMapping("/menu")
     public ApiResponse<List<MenuItemResponse>> menu(

@@ -1,10 +1,14 @@
 package com.aicustomer.exception;
 
-import com.aicustomer.constant.ErrorCodes;
-
+/**
+ * 参数错误：请求参数不符合校验规则（如空字段、格式错误等）。
+ */
 public class ParameterErrorException extends BusinessException {
+    public ParameterErrorException() {
+        super(1004, "参数错误");
+    }
 
     public ParameterErrorException(String message) {
-        super(ErrorCodes.PARAMETER_ERROR, message);
+        super(1004, message);
     }
 }

@@ -1,10 +1,10 @@
 package com.aicustomer.exception;
 
-import com.aicustomer.constant.ErrorCodes;
-
+/**
+ * 账号不存在：登录时账号在数据库中查不到。
+ */
 public class AccountNotFoundException extends BusinessException {
-
     public AccountNotFoundException() {
-        super(ErrorCodes.ACCOUNT_NOT_FOUND, ErrorCodes.MSG_ACCOUNT_NOT_FOUND);
+        super(1002, "账号不存在");
     }
 }

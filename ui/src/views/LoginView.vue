@@ -48,6 +48,7 @@
       </el-tabs>
     </el-card>
 
+    <!-- 注册弹窗 -->
     <el-dialog v-model="registerDialogVisible" :title="registerTitle" width="400px">
       <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="60px">
         <el-form-item label="账号" prop="account">
@@ -76,12 +77,13 @@ import { commercialTenantApi, userApi } from '@/api'
 import { useUserAuthStore, useMerchantAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-// 登录页 /login 不属于 /user 或 /merchant 任何一个分支，没法用通用的
-// useAuthStore() 按路由判断身份，两个表单分别显式用各自的 store，
-// 这样用户号登录不会覆盖商户号的登录态，反之亦然。
+
+// 登录页不属于 /user 或 /merchant 分支，两个表单分别显式用各自的 Store，
+// 避免用户号登录覆盖商户号登录态，反之亦然。
 const userAuthStore = useUserAuthStore()
 const merchantAuthStore = useMerchantAuthStore()
 
+// 表单状态
 const activeTab = ref('user')
 const userFormRef = ref()
 const merchantFormRef = ref()
@@ -96,6 +98,7 @@ const userLoading = ref(false)
 const merchantLoading = ref(false)
 const registerLoading = ref(false)
 
+// 校验规则
 const rules = {
   account: [{ required: true, message: '请输入账号', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
@@ -107,8 +110,13 @@ const registerRules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
+// 根据注册类型动态显示弹窗标题
 const registerTitle = computed(() => registerType.value === 'user' ? '用户注册' : '商户注册')
 
+/**
+ * 处理用户登录。
+ * 登录成功后保存用户端登录态，跳转至用户商品页。
+ */
 async function handleUserLogin() {
   const valid = await userFormRef.value.validate().catch(() => false)
   if (!valid) return
@@ -123,6 +131,10 @@ async function handleUserLogin() {
   }
 }
 
+/**
+ * 处理商户登录。
+ * 登录成功后保存商户端登录态，跳转至商户工作台。
+ */
 async function handleMerchantLogin() {
   const valid = await merchantFormRef.value.validate().catch(() => false)
   if (!valid) return
@@ -137,12 +149,19 @@ async function handleMerchantLogin() {
   }
 }
 
+/**
+ * 打开注册弹窗，记录当前注册类型（user / merchant）。
+ */
 function goToRegister(type) {
   registerType.value = type
   registerFormRef.value?.resetFields()
   registerDialogVisible.value = true
 }
 
+/**
+ * 处理注册。
+ * 注册成功后关闭弹窗，切换至对应登录 Tab 引导用户登录。
+ */
 async function handleRegister() {
   const valid = await registerFormRef.value.validate().catch(() => false)
   if (!valid) return
@@ -155,6 +174,7 @@ async function handleRegister() {
     }
     ElMessage.success('注册成功，请登录')
     registerDialogVisible.value = false
+    // 切换至对应登录 Tab
     activeTab.value = registerType.value === 'user' ? 'user' : 'merchant'
   } finally {
     registerLoading.value = false

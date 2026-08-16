@@ -7,6 +7,9 @@ import com.aicustomer.exception.ResourceNotFoundException;
 import com.aicustomer.repository.SessionRepository;
 import org.springframework.stereotype.Service;
 
+/**
+ * 会话访问校验服务，提供会话归属校验逻辑。
+ */
 @Service
 public class SessionAccessService {
 
@@ -18,7 +21,12 @@ public class SessionAccessService {
 
     /**
      * 校验当前用户是否有权访问该会话，返回已校验的 Session。
-     * 逻辑：session 不存在 → 404；存在但非参与方 → 403。
+     *
+     * @param sessionId    会话 ID
+     * @param currentUser 当前登录用户
+     * @return 会话实体
+     * @throws ResourceNotFoundException 会话不存在
+     * @throws ForbiddenException        当前用户不是该会话的参与方
      */
     public Session validateAndGetSession(Long sessionId, CurrentUser currentUser) {
         Session session = sessionRepository.findById(sessionId)

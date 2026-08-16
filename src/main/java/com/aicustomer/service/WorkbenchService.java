@@ -28,7 +28,7 @@ public class WorkbenchService {
                 MenuItemResponse.builder()
                         .name("会话收件箱")
                         .path("/inbox")
-                        .placeholder(true)
+                        .placeholder(false)
                         .build(),
                 MenuItemResponse.builder()
                         .name("经营数据")

@@ -5,7 +5,6 @@ import com.aicustomer.dto.request.AddGoodsRequest;
 import com.aicustomer.dto.request.UpdateGoodsRequest;
 import com.aicustomer.dto.response.ApiResponse;
 import com.aicustomer.dto.response.GoodsResponse;
-import com.aicustomer.exception.UnauthorizedException;
 import com.aicustomer.service.GoodsService;
 import com.aicustomer.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,8 +31,8 @@ public class GoodsController {
     public ApiResponse<GoodsResponse> add(
             @RequestHeader(value = "Authorization", required = false) String token,
             @Valid @RequestBody AddGoodsRequest request) {
-        requireTenantToken(token);
-        GoodsResponse response = goodsService.add(token, request);
+        Long ctId = tokenService.requireToken(SubjectType.TENANT, token);
+        GoodsResponse response = goodsService.add(ctId, request);
         return ApiResponse.success(response);
     }
 
@@ -42,8 +41,8 @@ public class GoodsController {
     public ApiResponse<GoodsResponse> update(
             @RequestHeader(value = "Authorization", required = false) String token,
             @Valid @RequestBody UpdateGoodsRequest request) {
-        requireTenantToken(token);
-        GoodsResponse response = goodsService.update(token, request);
+        Long ctId = tokenService.requireToken(SubjectType.TENANT, token);
+        GoodsResponse response = goodsService.update(ctId, request);
         return ApiResponse.success(response);
     }
 
@@ -52,8 +51,8 @@ public class GoodsController {
     public ApiResponse<Void> delete(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestParam Long id) {
-        requireTenantToken(token);
-        goodsService.delete(token, id);
+        Long ctId = tokenService.requireToken(SubjectType.TENANT, token);
+        goodsService.delete(ctId, id);
         return ApiResponse.success(null);
     }
 
@@ -63,8 +62,8 @@ public class GoodsController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
-        requireTenantToken(token);
-        Page<GoodsResponse> page = goodsService.mine(token, pageNum, pageSize);
+        Long ctId = tokenService.requireToken(SubjectType.TENANT, token);
+        Page<GoodsResponse> page = goodsService.mine(ctId, pageNum, pageSize);
         return ApiResponse.success(page);
     }
 
@@ -82,14 +81,5 @@ public class GoodsController {
     public ApiResponse<GoodsResponse> detail(@RequestParam Long id) {
         GoodsResponse response = goodsService.detail(id);
         return ApiResponse.success(response);
-    }
-
-    private void requireTenantToken(String token) {
-        if (token == null || token.isBlank()) {
-            throw new UnauthorizedException();
-        }
-            if (tokenService.resolve(SubjectType.TENANT, token) == null) {
-            throw new UnauthorizedException();
-        }
     }
 }

@@ -3,7 +3,6 @@ package com.aicustomer.controller;
 import com.aicustomer.constant.SubjectType;
 import com.aicustomer.dto.response.ApiResponse;
 import com.aicustomer.dto.response.MenuItemResponse;
-import com.aicustomer.exception.UnauthorizedException;
 import com.aicustomer.service.TokenService;
 import com.aicustomer.service.WorkbenchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,12 +31,7 @@ public class WorkbenchController {
     @GetMapping("/menu")
     public ApiResponse<List<MenuItemResponse>> menu(
             @RequestHeader(value = "Authorization", required = false) String token) {
-        if (token == null || token.isBlank()) {
-            throw new UnauthorizedException();
-        }
-        if (tokenService.resolve(SubjectType.TENANT, token) == null) {
-            throw new UnauthorizedException();
-        }
+        tokenService.requireToken(SubjectType.TENANT, token);
         List<MenuItemResponse> menu = workbenchService.getMenu();
         return ApiResponse.success(menu);
     }

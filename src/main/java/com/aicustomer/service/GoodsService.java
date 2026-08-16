@@ -6,8 +6,6 @@ import com.aicustomer.dto.response.GoodsResponse;
 import com.aicustomer.entity.Goods;
 import com.aicustomer.exception.ForbiddenException;
 import com.aicustomer.exception.ResourceNotFoundException;
-import com.aicustomer.exception.UnauthorizedException;
-import com.aicustomer.constant.SubjectType;
 import com.aicustomer.repository.GoodsRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,22 +13,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class GoodsService {
 
     private final GoodsRepository goodsRepository;
-    private final TokenService tokenService;
 
-    public GoodsService(GoodsRepository goodsRepository, TokenService tokenService) {
+    public GoodsService(GoodsRepository goodsRepository) {
         this.goodsRepository = goodsRepository;
-        this.tokenService = tokenService;
     }
 
     @Transactional
-    public GoodsResponse add(String token, AddGoodsRequest request) {
-        Long ctId = resolveTenant(token);
+    public GoodsResponse add(Long ctId, AddGoodsRequest request) {
         Goods goods = Goods.builder()
                 .name(request.getName())
                 .ctId(ctId)
@@ -40,8 +33,7 @@ public class GoodsService {
     }
 
     @Transactional
-    public GoodsResponse update(String token, UpdateGoodsRequest request) {
-        Long ctId = resolveTenant(token);
+    public GoodsResponse update(Long ctId, UpdateGoodsRequest request) {
         Goods goods = goodsRepository.findById(request.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Goods", request.getId()));
         if (!goods.getCtId().equals(ctId)) {
@@ -53,8 +45,7 @@ public class GoodsService {
     }
 
     @Transactional
-    public void delete(String token, Long id) {
-        Long ctId = resolveTenant(token);
+    public void delete(Long ctId, Long id) {
         Goods goods = goodsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Goods", id));
         if (!goods.getCtId().equals(ctId)) {
@@ -63,8 +54,7 @@ public class GoodsService {
         goodsRepository.delete(goods);
     }
 
-    public Page<GoodsResponse> mine(String token, int pageNum, int pageSize) {
-        Long ctId = resolveTenant(token);
+    public Page<GoodsResponse> mine(Long ctId, int pageNum, int pageSize) {
         PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.DESC, "id"));
         return goodsRepository.findByCtId(ctId, pageRequest).map(this::toResponse);
     }
@@ -78,17 +68,6 @@ public class GoodsService {
         Goods goods = goodsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Goods", id));
         return toResponse(goods);
-    }
-
-    private Long resolveTenant(String token) {
-        if (token == null || token.isBlank()) {
-            throw new UnauthorizedException();
-        }
-        Long ctId = tokenService.resolve(SubjectType.TENANT, token);
-        if (ctId == null) {
-            throw new UnauthorizedException();
-        }
-        return ctId;
     }
 
     private GoodsResponse toResponse(Goods goods) {

@@ -5,16 +5,18 @@
       :goods-id="route.query.goodsId || ''"
       :ct-id="route.query.ctId || ''"
       :title="chatTitle"
+      @session-created="handleSessionCreated"
     />
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ChatWindow from '@/components/ChatWindow.vue'
 
 const route = useRoute()
+const router = useRouter()
 
 const chatTitle = computed(() => {
   const ctId = route.query.ctId
@@ -27,6 +29,12 @@ const chatTitle = computed(() => {
   }
   return '会话详情'
 })
+
+// SESSION_CREATED 之后把地址栏更新为带 sessionId 的路径，同一个命名路由
+// （UserChatWindow）只是替换 params，不会重新挂载组件、不会打断 WebSocket 连接
+function handleSessionCreated(sessionId) {
+  router.replace({ name: 'UserChatWindow', params: { sessionId } })
+}
 </script>
 
 <style scoped>

@@ -8,7 +8,12 @@
     <el-table :data="tableData" v-loading="loading" stripe>
       <el-table-column prop="id" label="ID" width="100" />
       <el-table-column prop="name" label="商品名称" />
-      <el-table-column prop="ctId" label="所属商户ID" />
+      <el-table-column label="创建时间" width="180">
+        <template #default="{ row }">
+          {{ row.createdAt ? formatDateTime(row.createdAt) : '—' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="ctId" label="所属商户ID" width="110" />
       <el-table-column label="操作" width="150">
         <template #default="{ row }">
           <div class="action-buttons">
@@ -48,6 +53,14 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { goodsApi } from '@/api'
+import dayjs from '@/utils/dayjs'
+
+// 注意：后端 GoodsResponse 目前没有返回 createdAt 字段（见 openapi.json），
+// 这一列暂时会一直显示 "—"。这里先把展示逻辑补上，等后端加了这个字段就能直接生效，
+// 不用再改前端。
+function formatDateTime(date) {
+  return dayjs(date).format('YYYY-MM-DD HH:mm')
+}
 
 const tableData = ref([])
 const loading = ref(false)

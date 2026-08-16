@@ -45,6 +45,11 @@ public class UserService {
                 .build();
     }
 
+    /** 供聊天窗口按 userId 反查用户名称展示，查不到返回 null，不抛异常打断聊天页 */
+    public String getName(Long userId) {
+        return userRepository.findById(userId).map(User::getName).orElse(null);
+    }
+
     public AccountResponse login(LoginRequest request) {
         User user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(AccountNotFoundException::new);

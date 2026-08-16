@@ -45,6 +45,11 @@ public class CommercialTenantService {
                 .build();
     }
 
+    /** 供聊天窗口按 ctId 反查商户名称展示，查不到返回 null，不抛异常打断聊天页 */
+    public String getName(Long ctId) {
+        return commercialTenantRepository.findById(ctId).map(CommercialTenant::getName).orElse(null);
+    }
+
     public AccountResponse login(LoginRequest request) {
         CommercialTenant tenant = commercialTenantRepository.findByAccount(request.getAccount())
                 .orElseThrow(AccountNotFoundException::new);

@@ -68,7 +68,7 @@ function handleConsult(item) {
     router.push('/login')
     return
   }
-  router.push({ name: 'UserNewChat', query: { goodsId: item.id, ctId: item.ctId } })
+  router.push({ name: 'UserChatWindow', query: { goodsId: item.id, ctId: item.ctId } })
 }
 
 onMounted(() => {

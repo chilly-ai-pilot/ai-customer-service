@@ -3,7 +3,10 @@
 ## 1. 技术栈（严格按此执行）
 - Vue 3 + Vite + Vue Router 4
 - 状态管理：Pinia
-- UI 组件库：Element Plus（自动按需导入）
+- UI 组件库：Element Plus（自动按需导入，用 `unplugin-vue-components` +
+  `unplugin-auto-import` 的 `ElementPlusResolver`，不在 `main.js` 里整包
+  `app.use(ElementPlus)`；图标组件体积很小，`@element-plus/icons-vue` 仍手动全局注册；
+  中文语言包改用 `<el-config-provider :locale="zhCn">` 包一层根组件提供）
 - HTTP 请求：Axios（需封装）
 - 后端 API：严格按照我提供的 OpenAPI 3.0.1 规范（见附件），不得自行编造接口路径或字段。
 
@@ -35,7 +38,10 @@
 
 ## 4. 商户端 - 商品管理（/merchant/goods）
 - **顶部**：标题“商品管理” + “新增商品”按钮（`el-button`）。
-- **表格**（`el-table`）：展示 ID、商品名称、创建时间、操作。
+- **表格**（`el-table`）：展示 ID、商品名称、创建时间、所属商户ID、操作。
+  > 注：后端 `GoodsResponse`（见 openapi.json）目前只有 `id`/`name`/`ctId`，**没有
+  > `createdAt` 字段**。"创建时间"列前端已经按 `row.createdAt` 接好格式化逻辑，
+  > 但在后端补这个字段之前会一直显示"—"占位；"所属商户ID"直接展示 `ctId`。
 - **操作列**：编辑（`el-button` text）、删除（`el-button` text danger）。
 - **新增/编辑**：使用 `el-dialog` 弹窗，仅包含 `name` 输入框。
 - **删除**：使用 `ElMessageBox.confirm` 二次确认。
@@ -57,7 +63,8 @@
     - 若已登录，提示 `ElMessage.info('咨询功能开发中')`。
 
 ## 6. Axios 封装与拦截器（关键）
-- **BaseURL**：`http://localhost:8080`
+- **BaseURL**：`http://localhost:8080`（axios 直接请求这个地址，不经过 `/api` 之类的
+  前缀/开发代理；后端需要允许来自前端开发地址的 CORS，否则本地 `vite dev` 会跨域失败）
 - **请求拦截器**：从 Pinia store 读取 token，添加到请求头 `Authorization: ${token}`（注意：直接传 token 字符串，不加 `Bearer ` 前缀，因为后端 OpenAPI 定义的是纯字符串）。
 - **响应拦截器**：
     - 若返回 `code === 0`，正常返回 `res.data`。
@@ -93,7 +100,7 @@
 | 原菜单名 | 新菜单名 | 路径 | 状态 |
 |---|---|---|---|
 | 商品 | 商品 | `/user/goods` | 保持不变 |
-| 咨询 | **我的咨询** | `/user/chat` | 改为可用（迭代3），不再弹"功能开发中" |
+| 咨询 | **我的咨询** | `/user/inbox` | 改为可用（迭代3），不再弹"功能开发中" |
 
 ### 1.2 商户端菜单改可用
 
@@ -102,7 +109,7 @@
 | 商品管理 | `/merchant/goods` | 保持不变 |
 | 知识库 | — | 保持占位（后续迭代） |
 | AI设置 | — | 保持占位（后续迭代） |
-| **会话收件箱** | `/merchant/chat` | **改为可用（迭代3）**，不再弹"功能开发中" |
+| **会话收件箱** | `/merchant/inbox` | **改为可用（迭代3）**，不再弹"功能开发中" |
 | 经营数据 | — | 保持占位（后续迭代） |
 
 **红点要求**：商户端侧边栏"会话收件箱"菜单旁显示未读消息总数角标（从 `/session/ct/list` 各会话 `unreadCount` 求和），>0 时显示红点或数字。
@@ -110,12 +117,21 @@
 
 ## 二、路由新增
 
+> **命名说明**：前端路由统一使用 `/inbox` 而不是 `/chat`（与 4.x 版本的实现保持一致，
+> 后续文档、验收清单一律以此为准）。注意这只是**前端页面路由**的命名，与后端
+> WebSocket 连接地址 `ws://.../user/chat/{userId}`、`ws://.../commercialTenant/chat/{ctId}`
+> 无关，那两个是后端接口路径，不受此调整影响。
+
 | 路径 | 组件 | 说明 |
 |---|---|---|
-| `/user/chat` | 用户端"我的咨询"列表页 | 展示当前用户的所有会话 |
-| `/user/chat/:sessionId?` | 用户端聊天窗口 | 与商户对话，`sessionId` 可选（新建会话时不带） |
-| `/merchant/chat` | 商户端"会话收件箱"列表页 | 展示该商户的所有会话 |
-| `/merchant/chat/:sessionId` | 商户端聊天窗口 | 回复用户，`sessionId` 必传 |
+| `/user/inbox` | 用户端"我的咨询"列表页 | 展示当前用户的所有会话 |
+| `/user/inbox/:sessionId?` | 用户端聊天窗口 | 与商户对话，`sessionId` 可选（新建会话时不带，走同一个命名路由，`SESSION_CREATED` 后用 `router.replace` 只更新 params，不重新挂载组件、不打断 WebSocket 连接） |
+| `/merchant/inbox` | 商户端"会话收件箱"列表页 | 展示该商户的所有会话 |
+| `/merchant/inbox/:sessionId` | 商户端聊天窗口 | 回复用户，`sessionId` 必传 |
+
+商户端侧边栏菜单不再用后端 `/workbench/menu` 返回的 `path` 字符串去匹配前端路由
+（避免两边路径约定不一致导致跳转/红点失效），改为用菜单 `name`（如"会话收件箱"）做
+一次前端内部映射；是否可点击直接读接口返回的 `placeholder` 字段。
 
 
 ## 三、用户端变更
@@ -124,23 +140,27 @@
 
 当前"咨询"按钮只弹 `ElMessage.info('功能开发中')`，现改为：
 
-- **已登录**：点击 → 跳转 `/user/chat?goodsId=xxx&ctId=xxx`
+- **已登录**：点击 → 跳转 `/user/inbox?goodsId=xxx&ctId=xxx`
 - **未登录**：弹 `ElMessage.warning('请先登录')` → 跳转 `/login`
 
-### 3.2 "我的咨询"列表页（/user/chat）
+### 3.2 "我的咨询"列表页（/user/inbox）
 
 **接口**：`GET /session/user/list`（需携带 token，分页参数 pageNum/pageSize，pageSize 默认 10）
 
 **列表项展示**：
-- 商户名称（从会话数据中取，暂缺则显示"商户"）
-- 商品名称（从会话数据中取，暂缺则显示"商品"）
+- 商户名称：后端 `SessionResponse` 目前只有 `ctId`，没有商户名称字段，也没有"按 ctId
+  查商户名称"的接口，暂时用 `商户 #{ctId}` 兜底展示，`ctId` 缺失时显示"商户"。
+  后续如需展示真实商户名，需要后端补充相应字段/接口。
+- 商品名称：`SessionResponse` 里同样只有 `goodsId`，前端用 `GET /goods/detail?id=`
+  换取真实商品名称并做本地缓存，避免同一个商品在列表里重复请求；请求失败或
+  `goodsId` 缺失时显示"商品"。
 - 最后一条消息预览（`lastMessageContent`，超过 50 字截断加 `...`）
 - 最后消息时间（`lastMessageTime`，做相对时间格式化："3分钟前""昨天 14:30"）
 - **未读红点**：`unreadCount > 0` 时显示红点或数字角标（`el-badge`）
 
-**交互**：点击任意会话 → 跳转 `/user/chat/:sessionId`
+**交互**：点击任意会话 → 跳转 `/user/inbox/:sessionId`
 
-### 3.3 用户端聊天窗口（/user/chat/:sessionId?）
+### 3.3 用户端聊天窗口（/user/inbox/:sessionId?）
 
 **布局**：顶部标题栏 + 消息列表 + 底部输入框
 
@@ -154,7 +174,7 @@
     - 调用 `PUT /session/{sessionId}/message/read` 标记该会话中商户发给用户的消息为已读
 3. **如果 URL 中无 `sessionId`**（从商品卡片"咨询"按钮跳转进入）：
     - 不加载历史消息
-    - 页面 URL 中携带 `goodsId` 和 `ctId` 参数（如 `/user/chat?goodsId=1&ctId=1`）
+    - 页面 URL 中携带 `goodsId` 和 `ctId` 参数（如 `/user/inbox?goodsId=1&ctId=1`）
 
 **消息列表渲染**：
 - 区分"我发的"和"对方发的"：气泡颜色不同（我是绿色/对方灰色）
@@ -171,33 +191,45 @@
   ```json
   { "sessionId": 123, "message": "你好" }
   ```
+  发送时不携带任何客户端自定义的临时 ID 字段（如 `tempId`），严格只发上面两种格式。
 
 **接收消息处理**：
 
 | 收到的 state | 含义 | 前端处理 |
 |---|---|---|
-| `SESSION_CREATED` | 会话新建成功 | 记录 `sessionId`（更新 URL），消息追加到列表 |
-| `SUCCESS` | 消息发送成功 | 消息追加到列表 |
-| `ERROR` | 消息发送失败 | `ElMessage.error('发送失败，请重试')` |
+| `SESSION_CREATED` | 会话新建成功 | 记录 `sessionId`（更新 URL），把本地"发送中"的那条消息标记为已发送 |
+| `SUCCESS` | 消息发送成功 | 把本地"发送中"的那条消息标记为已发送 |
+| `ERROR` | 消息发送失败 | 把本地"发送中"的那条消息标记为失败，`ElMessage.error('发送失败，请重试')` |
 | 收到对方消息 | `senderType !== 当前用户类型` | 实时追加到消息列表 |
+
+> **本地"发送中"消息如何和回执对上**：`MessageResponse` 里的 `messageId`/`id` 都是
+> 服务端生成的，WS 发送协议也没有约定客户端可以带一个临时 ID 让服务端原样回传，
+> 所以不能指望靠"ID 相等"去匹配某条本地消息。前端改用**发送顺序**做匹配：本地维护
+> 一个"待确认发送队列"（FIFO），每发一条消息入队一个本地临时 ID，收到
+> `SESSION_CREATED`/`SUCCESS`/`ERROR` 时从队首出队，去更新对应那条本地气泡的状态
+> （成功则补上服务端返回的 `id`/`createdAt`，失败则标红显示"发送失败"），而不是
+> 再额外插入一条新的系统提示气泡。这样即使匹配不到 ID，也不会让消息永远停在
+> "发送中"。如果后端后续愿意支持"客户端传入的临时 ID 原样回传"，可以换成更精确
+> 的 ID 匹配。
 
 
 ## 四、商户端变更
 
-### 4.1 会话收件箱列表页（/merchant/chat）
+### 4.1 会话收件箱列表页（/merchant/inbox）
 
 **接口**：`GET /session/ct/list`（需携带 token，分页参数 pageNum/pageSize，pageSize 默认 10）
 
-**列表项展示**（同用户端）：
-- 用户名称（从会话数据中取，暂缺则显示"用户"）
-- 商品名称（从会话数据中取，暂缺则显示"商品"）
+**列表项展示**（同用户端，同样受限于后端字段）：
+- 用户名称：`SessionResponse` 只有 `userId`，暂时用 `用户 #{userId}` 兜底展示，
+  `userId` 缺失时显示"用户"。
+- 商品名称：同 3.2，用 `GET /goods/detail?id=` 换取真实名称并缓存。
 - 最后一条消息预览（`lastMessageContent`，超过 50 字截断）
 - 最后消息时间（`lastMessageTime`，相对时间格式化）
 - **未读红点**：`unreadCount > 0` 时显示红点或数字角标
 
-**交互**：点击任意会话 → 跳转 `/merchant/chat/:sessionId`
+**交互**：点击任意会话 → 跳转 `/merchant/inbox/:sessionId`
 
-### 4.2 商户端聊天窗口（/merchant/chat/:sessionId）
+### 4.2 商户端聊天窗口（/merchant/inbox/:sessionId）
 
 **布局**：同用户端聊天窗口
 
@@ -239,6 +271,14 @@
 - 如果本地没有消息（首次进入），正常拉取全部历史消息
 - 拼接后自动滚动到最新消息
 
+> **实现方式说明**：`GET /session/{sessionId}/message/list` 只支持 `pageNum`/`pageSize`
+> 分页，没有"某个时间点之后"的游标参数，服务端并不会替前端做增量过滤。前端的实现
+> 方式是：先用 `pageSize=1` 探出 `totalElements`，再用这个总数一次性把该会话全部消息
+> 取回（升序），本地按 `id` 去重 + 按本地最后一条消息的 `createdAt` 过滤，只把"本地还
+> 没有"的部分追加到列表底部，已加载的消息全程不动、不重新渲染。会话消息量较大时这个
+> 方式请求体会变大，如果后续要支持长会话，需要后端补一个真正支持增量游标（例如
+> `since`/`afterId` 参数）的接口。
+
 ### 5.4 连接关闭
 - 组件卸载时主动关闭 WebSocket 连接
 - 页面刷新/关闭时，浏览器会自动关闭 WS 连接
@@ -257,7 +297,7 @@
 
 | 组件名 | 用途 | 复用场景 |
 |---|---|---|
-| `SessionList.vue` | 会话列表（分页 + 预览 + 未读红点） | 用户端 `/user/chat` 和商户端 `/merchant/chat` |
+| `SessionList.vue` | 会话列表（分页 + 预览 + 未读红点） | 用户端 `/user/inbox` 和商户端 `/merchant/inbox` |
 | `ChatWindow.vue` | 聊天窗口（消息列表 + 输入框 + WS 管理） | 用户端和商户端，通过 props 区分类型 |
 | `RelativeTime.vue` | 相对时间格式化 | 全局复用 |
 
@@ -274,18 +314,18 @@
 ## 八、验收清单
 
 ### 菜单与路由
-- [ ] 用户端"咨询"菜单改名为"我的咨询"，点击跳转 `/user/chat`
-- [ ] 商户端"会话收件箱"菜单可用，点击跳转 `/merchant/chat`
+- [ ] 用户端"咨询"菜单改名为"我的咨询"，点击跳转 `/user/inbox`
+- [ ] 商户端"会话收件箱"菜单可用，点击跳转 `/merchant/inbox`
 - [ ] 商户端侧边栏"会话收件箱"显示未读总数角标
 
 ### 商品卡片咨询入口
-- [ ] 已登录用户点击"咨询" → 跳转 `/user/chat?goodsId=xxx&ctId=xxx`
+- [ ] 已登录用户点击"咨询" → 跳转 `/user/inbox?goodsId=xxx&ctId=xxx`
 - [ ] 未登录用户点击"咨询" → 弹 `ElMessage.warning('请先登录')` → 跳转 `/login`
 
 ### 用户端"我的咨询"列表
 - [ ] 列表展示所有会话，按 `lastMessageTime` 倒序
 - [ ] 每个会话显示：商户名、商品名、最后消息预览、时间、未读红点
-- [ ] 点击会话 → 跳转 `/user/chat/:sessionId`
+- [ ] 点击会话 → 跳转 `/user/inbox/:sessionId`
 
 ### 用户端聊天窗口
 - [ ] 从"我的咨询"进入：加载历史消息，标记已读
@@ -297,7 +337,7 @@
 ### 商户端会话收件箱
 - [ ] 列表展示所有会话，按 `lastMessageTime` 倒序
 - [ ] 每个会话显示：用户名、商品名、最后消息预览、时间、未读红点
-- [ ] 点击会话 → 跳转 `/merchant/chat/:sessionId`
+- [ ] 点击会话 → 跳转 `/merchant/inbox/:sessionId`
 
 ### 商户端聊天窗口
 - [ ] 加载历史消息，标记已读

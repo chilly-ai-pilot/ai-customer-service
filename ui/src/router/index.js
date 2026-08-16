@@ -46,12 +46,10 @@ const routes = [
         component: () => import('@/views/UserChatView.vue')
       },
       {
-        path: 'inbox/new',
-        name: 'UserNewChat',
-        component: () => import('@/views/UserChatWindowView.vue')
-      },
-      {
-        path: 'inbox/:sessionId',
+        // sessionId 可选：从商品卡片"咨询"进入时不带 sessionId（带 goodsId/ctId query），
+        // 从"我的咨询"列表进入时带 sessionId。同一个路由名，SESSION_CREATED 后
+        // router.replace 更新 params 不会重新挂载组件，WebSocket 连接得以保留。
+        path: 'inbox/:sessionId?',
         name: 'UserChatWindow',
         component: () => import('@/views/UserChatWindowView.vue')
       }

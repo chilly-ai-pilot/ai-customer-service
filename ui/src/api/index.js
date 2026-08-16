@@ -13,9 +13,6 @@ export const sessionApi = {
   markRead(sessionId) {
     return axios.put(`/session/${sessionId}/message/read`)
   },
-  getUnreadCount(sessionId) {
-    return axios.get(`/session/${sessionId}/message/unread-count`)
-  },
   detail(sessionId) {
     return axios.get(`/session/${sessionId}`)
   }
@@ -54,6 +51,9 @@ export const userApi = {
   },
   register(data) {
     return axios.post('/user/register', data)
+  },
+  name(id) {
+    return axios.get(`/user/${id}/name`)
   }
 }
 
@@ -63,5 +63,8 @@ export const commercialTenantApi = {
   },
   register(data) {
     return axios.post('/commercialTenant/register', data)
+  },
+  name(id) {
+    return axios.get(`/commercialTenant/${id}/name`)
   }
 }

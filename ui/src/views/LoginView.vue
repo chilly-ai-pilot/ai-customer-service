@@ -73,10 +73,14 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { commercialTenantApi, userApi } from '@/api'
-import { useAuthStore } from '@/stores/auth'
+import { useUserAuthStore, useMerchantAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
+// 登录页 /login 不属于 /user 或 /merchant 任何一个分支，没法用通用的
+// useAuthStore() 按路由判断身份，两个表单分别显式用各自的 store，
+// 这样用户号登录不会覆盖商户号的登录态，反之亦然。
+const userAuthStore = useUserAuthStore()
+const merchantAuthStore = useMerchantAuthStore()
 
 const activeTab = ref('user')
 const userFormRef = ref()
@@ -111,7 +115,7 @@ async function handleUserLogin() {
   userLoading.value = true
   try {
     const data = await userApi.login(userForm.value)
-    authStore.setAuth(data.token, data, 'USER')
+    userAuthStore.setAuth(data.token, data, 'USER')
     ElMessage.success('登录成功')
     router.push('/user/goods')
   } finally {
@@ -125,7 +129,7 @@ async function handleMerchantLogin() {
   merchantLoading.value = true
   try {
     const data = await commercialTenantApi.login(merchantForm.value)
-    authStore.setAuth(data.token, data, 'TENANT')
+    merchantAuthStore.setAuth(data.token, data, 'TENANT')
     ElMessage.success('登录成功')
     router.push('/merchant/goods')
   } finally {

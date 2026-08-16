@@ -35,6 +35,12 @@ public class CommercialTenantController {
         return ApiResponse.success(response);
     }
 
+    @Operation(summary = "按商户ID查名称（供聊天窗口展示对方名字用）")
+    @GetMapping("/{id}/name")
+    public ApiResponse<String> name(@PathVariable Long id) {
+        return ApiResponse.success(commercialTenantService.getName(id));
+    }
+
     @Operation(summary = "商户登录")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "登录成功",

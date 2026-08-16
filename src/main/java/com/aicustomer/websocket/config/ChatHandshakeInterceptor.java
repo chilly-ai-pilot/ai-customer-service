@@ -76,13 +76,7 @@ public class ChatHandshakeInterceptor implements HandshakeInterceptor {
 
     private String extractToken(ServerHttpRequest request) {
         if (request instanceof ServletServerHttpRequest servletRequest) {
-            var httpSession = servletRequest.getServletRequest().getSession(false);
-            if (httpSession != null) {
-                Object token = httpSession.getAttribute("token");
-                if (token instanceof String) {
-                    return (String) token;
-                }
-            }
+            return servletRequest.getServletRequest().getParameter("token");
         }
         return null;
     }
